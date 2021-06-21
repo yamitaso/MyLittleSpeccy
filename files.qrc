@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/roms">
+        <file alias="48.rom">files/48.rom</file>
+        <file>files/128.rom</file>
+    </qresource>
+</RCC>
