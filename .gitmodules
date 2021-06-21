@@ -1,6 +1,0 @@
-[submodule "3rdparty/Z80"]
-	path = 3rdparty/Z80
-	url = https://github.com/redcode/Z80
-[submodule "3rdparty/Z"]
-	path = 3rdparty/Z
-	url = https://github.com/redcode/Z
