@@ -214,16 +214,16 @@ MainWindow::MainWindow(QWidget *parent)
                 SLOT(toggleFlash()));
     flash_timer->start(320);
 
-//    gamepads = QGamepadManager::instance()->connectedGamepads();
-//    if (gamepads.isEmpty()) {
-//            ui->actionGamepad->setText("Gamepad not found");
-//            ui->actionGamepad->setDisabled(true);
-//            return;
-//        }
-//    else{
-//        ui->actionGamepad->setText(QGamepadManager::instance()->gamepadName(*QGamepadManager::instance()->connectedGamepads().begin()));
-//        ui->actionGamepad->setDisabled(false);
-//    }
+    gamepads = QGamepadManager::instance()->connectedGamepads();
+    if (gamepads.isEmpty()) {
+            ui->actionGamepad->setText("Gamepad not found");
+            ui->actionGamepad->setDisabled(true);
+            return;
+        }
+    else{
+        ui->actionGamepad->setText(QGamepadManager::instance()->gamepadName(*QGamepadManager::instance()->connectedGamepads().begin()));
+        ui->actionGamepad->setDisabled(false);
+    }
 
 
 
