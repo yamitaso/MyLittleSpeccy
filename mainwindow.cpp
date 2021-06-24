@@ -113,6 +113,16 @@ enum {
     SINCLAIR_IF2_P1 = 2,
     SINCLAIR_IF2_P2 = 3,
 };
+#if defined(WIN32)
+static constexpr int ESC_SCANCODE   = 1;
+static constexpr int F11_SCANCODE   = 87;
+static constexpr int F12_SCANCODE   = 88;
+static constexpr int UP_SCANCODE    = 328;
+static constexpr int DOWN_SCANCODE  = 336;
+static constexpr int LEFT_SCANCODE  = 331;
+static constexpr int RIGHT_SCANCODE = 333;
+static constexpr int LCTRL_SCANCODE = 29;
+#else
 static constexpr int ESC_SCANCODE = 9;
 static constexpr int F11_SCANCODE = 95;
 static constexpr int F12_SCANCODE = 96;
@@ -121,6 +131,7 @@ static constexpr int DOWN_SCANCODE = 116;
 static constexpr int LEFT_SCANCODE = 113;
 static constexpr int RIGHT_SCANCODE = 114;
 static constexpr int LCTRL_SCANCODE = 37;
+#endif
 
 static uint8_t s_mem_read(void *context, uint16_t addr){
     BusInterface * bi = reinterpret_cast<BusInterface*>(context);
@@ -214,15 +225,21 @@ MainWindow::MainWindow(QWidget *parent)
                 SLOT(toggleFlash()));
     flash_timer->start(320);
 
+    for (int i=0;i<10;i++){
     gamepads = QGamepadManager::instance()->connectedGamepads();
     if (gamepads.isEmpty()) {
+            QApplication::processEvents();
             ui->actionGamepad->setText("Gamepad not found");
             ui->actionGamepad->setDisabled(true);
-            return;
+
         }
     else{
+        if (QGamepadManager::instance()->gamepadName(*QGamepadManager::instance()->connectedGamepads().begin()).length()>0)
         ui->actionGamepad->setText(QGamepadManager::instance()->gamepadName(*QGamepadManager::instance()->connectedGamepads().begin()));
+        else  ui->actionGamepad->setText("Gamepad");
         ui->actionGamepad->setDisabled(false);
+        i=10;
+    }
     }
 
 
@@ -554,8 +571,8 @@ void MainWindow::frameRefresh()
     z80_int(&cpustate,1);
     z80_run(&cpustate,28);
     z80_int(&cpustate,0);
-//    if (isFullScreen()){pal.setColor(QPalette::Window, ui->screen->_borderColor);
-//        setPalette(pal);}
+    if (isFullScreen()){pal.setColor(QPalette::Window, ui->screen->_borderColor);
+        setPalette(pal);}
     ui->screen->repaint();
 }
 
@@ -800,13 +817,21 @@ void MainWindow::on_actionGamepad_toggled(bool arg1)
         });
     connect(gamepad, &QGamepad::axisLeftXChanged, this, [this](double value){
             if(value<0){leftPressed();rightReleased();}
-            if(value>0.001){rightPressed();leftReleased();}
+            if(value>0.0001){rightPressed();leftReleased();}
+#if defined (WIN32)
+            if(value==0){leftReleased();rightReleased();}
+#else
             if(value>0 and value<0.001){leftReleased();rightReleased();}
+#endif
         });
     connect(gamepad, &QGamepad::axisLeftYChanged, this, [this](double value){
             if(value<0){upPressed();downReleased();}
             if(value>0.001){downPressed();upReleased();}
+#if defined (WIN32)
+            if(value==0){downReleased();upReleased();}
+#else
             if(value>0 and value<0.001){downReleased();upReleased();}
+#endif
         });
     connect(gamepad, &QGamepad::buttonSelectChanged, this, [this](bool pressed){
             if (pressed) reset();
