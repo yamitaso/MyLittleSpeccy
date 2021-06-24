@@ -5,6 +5,7 @@
 #include "businterface.h"
 #include "emulation/CPU/Z80.h"
 #include <QTimer>
+#include <QGamepad>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -49,6 +50,7 @@ public slots:
 
 
 
+
 protected:
     virtual bool eventFilter(QObject *object, QEvent *event) override;
     void load_sna(const QString &filename);
@@ -56,7 +58,7 @@ protected:
     void load_scr(const QString &filename);
     void save_z80(const QString &fileName);
     void save_scr(const QString &fileName);
-
+    void fullScreenSwitch();
 private slots:
     void frameRefresh();
 
@@ -94,6 +96,8 @@ private slots:
 
     void on_actionPalette_3_triggered();
 
+    void on_actionGamepad_toggled(bool arg1);
+
 private:
     Ui::MainWindow *ui;
 
@@ -102,6 +106,8 @@ private:
     Z80 cpustate {};
     QTimer * frame_timer;
     QTimer * flash_timer;
+    QGamepad * gamepad;
+    QList<int> gamepads;
 
 
 };

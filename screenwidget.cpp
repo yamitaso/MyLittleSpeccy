@@ -124,8 +124,10 @@ void ScreenWidget::paintEvent(QPaintEvent *event)
                 if (pixel xor (flash_state & flash)){
                     p.fillRect(pr, s_palettes[_palette][ink + 8 * bright]);
                 }
-                else
+                else{
+                    _borderColor = s_palettes[_palette][paper];
                     p.fillRect(pr, s_palettes[_palette][paper]);
+                }
             }
 
         }

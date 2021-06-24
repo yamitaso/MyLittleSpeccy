@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "businterface.h"
 
+
 class ScreenWidget : public QWidget
 {
     Q_OBJECT
@@ -15,6 +16,7 @@ public:
     static constexpr int BORDER_MIN_WIDTH = 32;
     static constexpr int BORDER_MIN_HEIGHT = 24;
     int _palette {0};
+    QColor _borderColor;
     void setPalette(int palette) {_palette = palette;}
 
 

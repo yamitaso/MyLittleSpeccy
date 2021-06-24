@@ -9,9 +9,12 @@
 #include "businterface128.h"
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QtGamepad>
 static constexpr int PAIR(int a, int b) { return a * 100 + b; }
 static constexpr int FIRST(int v) { return v / 100; }
 static constexpr int SECOND(int v) { return v % 100; }
+QPalette pal;
+QColor dColor;
 static const QMap<int, int> s_key_mapping{
 #if defined(WIN32)
     { 2,  PAIR(0, 11) },
@@ -111,6 +114,7 @@ enum {
     SINCLAIR_IF2_P2 = 3,
 };
 static constexpr int ESC_SCANCODE = 9;
+static constexpr int F11_SCANCODE = 95;
 static constexpr int F12_SCANCODE = 96;
 static constexpr int UP_SCANCODE = 111;
 static constexpr int DOWN_SCANCODE = 116;
@@ -177,6 +181,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->rightButton, SIGNAL(released()), this, SLOT(rightReleased()));
     connect(ui->fireButton,  SIGNAL(released()), this, SLOT(fireReleased()));
 
+
     bus->io_write8(0xfe, 3);
 
     cpustate.context = bus;
@@ -189,7 +194,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     reset();
-
+    pal = palette();
+    dColor = pal.color(QPalette::Window);
     for (uint32_t addr = 16384; addr < 16384 + 32*192 + 32*24; ++addr){
         bus->mem_write8(addr,addr & 0xff);
     }
@@ -207,6 +213,20 @@ MainWindow::MainWindow(QWidget *parent)
                 ui->screen,
                 SLOT(toggleFlash()));
     flash_timer->start(320);
+
+//    gamepads = QGamepadManager::instance()->connectedGamepads();
+//    if (gamepads.isEmpty()) {
+//            ui->actionGamepad->setText("Gamepad not found");
+//            ui->actionGamepad->setDisabled(true);
+//            return;
+//        }
+//    else{
+//        ui->actionGamepad->setText(QGamepadManager::instance()->gamepadName(*QGamepadManager::instance()->connectedGamepads().begin()));
+//        ui->actionGamepad->setDisabled(false);
+//    }
+
+
+
 
 }
 
@@ -228,7 +248,7 @@ void MainWindow::upPressed()
 }
 
 void MainWindow::downPressed()
-{
+{  
     switch (ui->jsCombo->currentIndex()){
     case CURSOR_IF:   bus->key_press(4, 12); break;
     case KEMPSTON_IF:   bus->kj_button_press(Port1F::KJ_DOWN); break;
@@ -317,8 +337,7 @@ void MainWindow::rightReleased()
     }
 }
 
-void MainWindow::fireReleased()
-{
+void MainWindow::fireReleased(){
     switch (ui->jsCombo->currentIndex()){
     case CURSOR_IF:    bus->key_release(0, 12); break;
     case KEMPSTON_IF:  bus->kj_button_release(Port1F::KJ_FIRE); break;
@@ -349,6 +368,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
 
         case ESC_SCANCODE: reset(); break;
         case F12_SCANCODE: z80_nmi(&cpustate); break;
+        case F11_SCANCODE: fullScreenSwitch(); break;
         case UP_SCANCODE: upPressed(); break;
         case DOWN_SCANCODE: downPressed(); break;
         case LEFT_SCANCODE: leftPressed(); break;
@@ -473,6 +493,8 @@ void MainWindow::load_z80(const QString &filename)
         cpustate.state.af.value_uint16 = z80_hdr->AF;
         cpustate.state.sp = z80_hdr->SP;
         cpustate.state.pc = z80_hdr->PC;
+
+
         cpustate.state.internal.im = z80_hdr->IM & 0b00000011;
         bus->io_write8(0xfe, (z80_hdr->B12 >> 1) & 0b00000111);
 
@@ -482,6 +504,7 @@ void MainWindow::load_z80(const QString &filename)
             QByteArray data;
             int status = 0;
             int size = buffer.size() - sizeof(Z80Header);
+
             unsigned r = 0;
             uint8_t *ptr = z80_memory;
             while (size!=0){
@@ -498,11 +521,13 @@ void MainWindow::load_z80(const QString &filename)
                 status = 0;
 
             }
+
             for (int off = 0; off < 49152; ++off){
                 if (off >= data.size()) break;
                 bus->mem_write8(16384+off,data[off]);
             }
         } else {
+
             for (int off = 0; off < 49152; ++off){
                 bus->mem_write8(16384+off,z80_memory[off]);
             }
@@ -529,9 +554,10 @@ void MainWindow::frameRefresh()
     z80_int(&cpustate,1);
     z80_run(&cpustate,28);
     z80_int(&cpustate,0);
+//    if (isFullScreen()){pal.setColor(QPalette::Window, ui->screen->_borderColor);
+//        setPalette(pal);}
     ui->screen->repaint();
 }
-
 
 void MainWindow::on_showControlsCB_stateChanged(int state)
 {
@@ -539,12 +565,19 @@ void MainWindow::on_showControlsCB_stateChanged(int state)
         ui->controlsTab->setVisible(true);
     else
         ui->controlsTab->setVisible(false);
+
+
+
+
+
+
 }
 
 void MainWindow::reset()
 {
     z80_reset(&cpustate);
     bus->reset();
+
 }
 
 void MainWindow::on_key_pressed(int row, int col)
@@ -578,6 +611,8 @@ void MainWindow::on_cbkbcapture_stateChanged(int state)
     else {
         removeEventFilter(this);
     }
+
+
 
 }
 
@@ -636,6 +671,31 @@ void MainWindow::save_scr(const QString &fileName)
             out<<bus->mem_read8(16384+off);
         }
        scrFile.close();
+    }
+}
+
+void MainWindow::fullScreenSwitch()
+{
+    if (isFullScreen()){
+        if(ui->showControlsCB->isChecked())ui->controlsTab->show();
+        ui->showControlsCB->show();
+        ui->cbkbcapture->show();
+        ui->resetButton->show();
+        ui->jsCombo->show();
+        ui->menubar->show();
+        pal.setColor(QPalette::Window, dColor);
+        setPalette(pal);
+        showNormal();
+    }
+    else {
+        ui->controlsTab->hide();
+        ui->menubar->hide();
+        ui->showControlsCB->hide();
+        ui->cbkbcapture->hide();
+        ui->resetButton->hide();
+        ui->jsCombo->hide();
+        ui->menubar->hide();
+        showFullScreen();
     }
 }
 
@@ -717,4 +777,41 @@ void MainWindow::on_actionPalette_3_triggered()
     ui->actionPalette_2->setChecked(false);
     ui->actionPalette_3->setChecked(true);
     ui->screen->setPalette(2);
+}
+
+void MainWindow::on_actionGamepad_toggled(bool arg1)
+{
+    if (arg1){
+    gamepad = new QGamepad(*gamepads.begin(), this);
+    connect(gamepad, &QGamepad::buttonAChanged, this, [this](bool pressed){
+            if (pressed) firePressed();  else fireReleased();
+        });
+    connect(gamepad, &QGamepad::buttonLeftChanged, this, [this](bool pressed){
+            if (pressed) leftPressed();  else leftReleased();
+        });
+    connect(gamepad, &QGamepad::buttonRightChanged, this, [this](bool pressed){
+            if (pressed) rightPressed();  else rightReleased();
+        });
+    connect(gamepad, &QGamepad::buttonUpChanged, this, [this](bool pressed){
+            if (pressed) upPressed();  else upReleased();
+        });
+    connect(gamepad, &QGamepad::buttonDownChanged, this, [this](bool pressed){
+            if (pressed) downPressed();  else downReleased();
+        });
+    connect(gamepad, &QGamepad::axisLeftXChanged, this, [this](double value){
+            if(value<0){leftPressed();rightReleased();}
+            if(value>0.001){rightPressed();leftReleased();}
+            if(value>0 and value<0.001){leftReleased();rightReleased();}
+        });
+    connect(gamepad, &QGamepad::axisLeftYChanged, this, [this](double value){
+            if(value<0){upPressed();downReleased();}
+            if(value>0.001){downPressed();upReleased();}
+            if(value>0 and value<0.001){downReleased();upReleased();}
+        });
+    connect(gamepad, &QGamepad::buttonSelectChanged, this, [this](bool pressed){
+            if (pressed) reset();
+        });}
+    else{
+        gamepad->disconnect();
+    }
 }

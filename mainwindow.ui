@@ -274,6 +274,8 @@
     <addaction name="actionPalette_1"/>
     <addaction name="actionPalette_2"/>
     <addaction name="actionPalette_3"/>
+    <addaction name="separator"/>
+    <addaction name="actionGamepad"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -371,6 +373,14 @@
    </property>
    <property name="text">
     <string>Palette 3</string>
+   </property>
+  </action>
+  <action name="actionGamepad">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Gamepad</string>
    </property>
   </action>
  </widget>
