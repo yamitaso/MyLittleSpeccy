@@ -12,11 +12,11 @@ public:
     virtual ~KeyboardWidget();
 
 public Q_SLOTS:
-    void on_key_pressed(int row, int col);
-    void on_key_released(int row, int col);
+    void on_key_pressed(int row, int col, int add);
+    void on_key_released(int row, int col, int add);
 Q_SIGNALS:
-    void key_pressed(int, int);
-    void key_released(int, int);
+    void key_pressed(int, int,int);
+    void key_released(int, int,int);
 protected:
     QVector<ZXPushButton*> buttons;
 };

@@ -13,6 +13,7 @@ SOURCES += \
     businterface.cpp \
     businterface128.cpp \
     businterface48.cpp \
+    dialogloadingtap.cpp \
     keyboardwidget.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -30,6 +31,7 @@ HEADERS += \
     businterface.h \
     businterface128.h \
     businterface48.h \
+    dialogloadingtap.h \
     keyboardwidget.h \
     mainwindow.h \
     port1f.h \
@@ -42,6 +44,7 @@ HEADERS += \
     zxpushbutton.h
 
 FORMS += \
+    dialogloadingtap.ui \
     mainwindow.ui
 
 OTHER_FILES += \

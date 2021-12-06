@@ -55,9 +55,12 @@ protected:
     virtual bool eventFilter(QObject *object, QEvent *event) override;
     void load_sna(const QString &filename);
     void load_z80(const QString &filename);
+    void load_tap(const QString &filename);
     void load_scr(const QString &filename);
     void save_z80(const QString &fileName);
     void save_scr(const QString &fileName);
+    void pilot_pulse(int len);
+    void pulse(int one_len, int zero_len);
     void fullScreenSwitch();
 private slots:
     void frameRefresh();
@@ -66,8 +69,8 @@ private slots:
 
     void reset();
 
-    void on_key_pressed(int row, int col);
-    void on_key_released(int row, int col);
+    void on_key_pressed(int row, int col, int add);
+    void on_key_released(int row, int col, int add);
 
     void on_action_Reset_triggered();
 
@@ -97,6 +100,7 @@ private slots:
     void on_actionPalette_3_triggered();
 
     void on_actionGamepad_toggled(bool arg1);
+
 
 private:
     Ui::MainWindow *ui;

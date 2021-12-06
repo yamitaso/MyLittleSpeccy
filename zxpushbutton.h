@@ -8,10 +8,11 @@ class ZXPushButton : public QPushButton
 {
     Q_OBJECT
 public:
-    ZXPushButton(int row, int col, QWidget * parent = nullptr);
+    ZXPushButton(int row, int col, int add, QWidget * parent = nullptr);
 
     int row() const { return _key_row; }
     int col() const { return _key_col; }
+    int add() const { return _key_add; }
 
 public Q_SLOTS:
     void on_pressed();
@@ -19,11 +20,11 @@ public Q_SLOTS:
     void on_toggled(bool);
 
 Q_SIGNALS:
-    int pressed(int, int);
-    int released(int, int);
+    int pressed(int, int, int);
+    int released(int, int, int);
 
 private:
-    int _key_row, _key_col;
+    int _key_row, _key_col, _key_add;
 };
 
 #endif // ZXPUSHBUTTON_H

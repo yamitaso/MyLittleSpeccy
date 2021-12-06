@@ -14,3 +14,8 @@ void BusInterface::key_release(int row, int col)
 {
     portfe.release_key(row, col);
 }
+
+void BusInterface::tape_in(int value)
+{
+    portfe.tape_in(value);
+}

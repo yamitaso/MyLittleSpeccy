@@ -14,6 +14,9 @@ uint8_t PortFE::read8(uint32_t addr)
 
 
     uint8_t result = 0b11111111;
+    if (!_tape_bit){
+        result &= ~(1 << 6);
+    }
     for (; i < 8; ++i){
         if ( !(col & col_mask) ){
             result &= _key_matrix[i];
@@ -28,6 +31,11 @@ void PortFE::write8(uint32_t addr, uint8_t value)
 {
     Q_UNUSED(addr);
     _fe_data = value;
+}
+
+void PortFE::tape_in(bool value)
+{
+    _tape_bit = value;
 }
 
 void PortFE::press_key(int row, int col)

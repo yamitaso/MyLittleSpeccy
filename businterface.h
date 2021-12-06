@@ -21,6 +21,8 @@ public:
     int border() const { return portfe.border(); }
     virtual const uint8_t * frameBuffer() const = 0;
 
+    void tape_in(int value);
+
     void key_press(int row, int col);
     void key_release(int row, int col);
 

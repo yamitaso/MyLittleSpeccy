@@ -27,6 +27,6 @@ uint8_t BusInterface48::io_read8(uint32_t addr)
 
 void BusInterface48::io_write8(uint32_t addr, uint8_t value)
 {
-    if ((addr & 1) == 0)
+    //if ((addr & 1) == 0)
         portfe.write8(addr, value);
 }

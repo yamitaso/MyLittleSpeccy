@@ -9,7 +9,9 @@
 #include "businterface128.h"
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QThread>
 #include <QtGamepad>
+#include "dialogloadingtap.h"
 static constexpr int PAIR(int a, int b) { return a * 100 + b; }
 static constexpr int FIRST(int v) { return v / 100; }
 static constexpr int SECOND(int v) { return v % 100; }
@@ -122,6 +124,18 @@ static constexpr int DOWN_SCANCODE  = 336;
 static constexpr int LEFT_SCANCODE  = 331;
 static constexpr int RIGHT_SCANCODE = 333;
 static constexpr int LCTRL_SCANCODE = 29;
+static constexpr int F1_SCANCODE = 59;
+static constexpr int F2_SCANCODE = 60;
+static constexpr int BACKSPACE_SCANCODE = 14;
+static constexpr int DELETE_SCANCODE = 339;
+static constexpr int F3_SCANCODE = 61;
+static constexpr int F4_SCANCODE = 62;
+static constexpr int F5_SCANCODE = 63;
+static constexpr int CAPS_LOCK_SCANCODE = 58;
+static constexpr int DOT_SCANCODE = 52;
+static constexpr int SINGO_SCANCODE = 39;
+static constexpr int QUOTES_SCANCODE = 40;
+static constexpr int COMMA_SCANCODE = 51;
 #else
 static constexpr int ESC_SCANCODE = 9;
 static constexpr int F11_SCANCODE = 95;
@@ -131,6 +145,18 @@ static constexpr int DOWN_SCANCODE = 116;
 static constexpr int LEFT_SCANCODE = 113;
 static constexpr int RIGHT_SCANCODE = 114;
 static constexpr int LCTRL_SCANCODE = 37;
+static constexpr int F1_SCANCODE = 67;
+static constexpr int F2_SCANCODE = 68;
+static constexpr int BACKSPACE_SCANCODE = 22;
+static constexpr int DELETE_SCANCODE = 119;
+static constexpr int F3_SCANCODE = 69;
+static constexpr int F4_SCANCODE = 70;
+static constexpr int F5_SCANCODE = 71;
+static constexpr int CAPS_LOCK_SCANCODE = 66;
+static constexpr int DOT_SCANCODE = 60;
+static constexpr int SINGO_SCANCODE = 47;
+static constexpr int QUOTES_SCANCODE = 48;
+static constexpr int COMMA_SCANCODE = 59;
 #endif
 
 static uint8_t s_mem_read(void *context, uint16_t addr){
@@ -170,13 +196,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->screen->setBusInterface(bus);
     connect(ui->kbwidget,
-            SIGNAL(key_pressed(int,int)),
+            SIGNAL(key_pressed(int,int,int)),
             this,
-            SLOT(on_key_pressed(int,int)));
+            SLOT(on_key_pressed(int,int,int)));
     connect(ui->kbwidget,
-            SIGNAL(key_released(int,int)),
+            SIGNAL(key_released(int,int,int)),
             this,
-            SLOT(on_key_released(int,int)));
+            SLOT(on_key_released(int,int,int)));
     setFocusPolicy(Qt::StrongFocus);
 
     connect(ui->resetButton, SIGNAL(clicked()), this, SLOT(reset()));
@@ -207,9 +233,9 @@ MainWindow::MainWindow(QWidget *parent)
     reset();
     pal = palette();
     dColor = pal.color(QPalette::Window);
-    for (uint32_t addr = 16384; addr < 16384 + 32*192 + 32*24; ++addr){
-        bus->mem_write8(addr,addr & 0xff);
-    }
+    //for (uint32_t addr = 16384; addr < 16384 + 32*192 + 32*24; ++addr){
+      //  bus->mem_write8(addr,addr & 0xff);
+    //}
 
     frame_timer = new QTimer();
 
@@ -378,7 +404,7 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
     Q_UNUSED(object);
     if (event->type() == QEvent::KeyPress) {
         QKeyEvent *ke = static_cast<QKeyEvent*>(event);
-//        qDebug() << "Key pressed: " << ke->nativeScanCode();
+        //qDebug() << "Key pressed: " << ke->nativeScanCode();
         auto sc = ke->nativeScanCode();
 
         switch (sc){
@@ -391,6 +417,18 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
         case LEFT_SCANCODE: leftPressed(); break;
         case RIGHT_SCANCODE: rightPressed(); break;
         case LCTRL_SCANCODE: firePressed(); break;
+        case F1_SCANCODE: on_key_pressed(2,11,1); break;
+        case F2_SCANCODE: on_key_pressed(3,11,1); break;
+        case BACKSPACE_SCANCODE: on_key_pressed(0,15,1); break;
+        case DELETE_SCANCODE: on_key_pressed(0,12,1); break;
+        case F3_SCANCODE: on_key_pressed(1,12,1); break;
+        case F4_SCANCODE: on_key_pressed(1,15,1); break;
+        case F5_SCANCODE: on_key_pressed(0,11,1); break;
+        case CAPS_LOCK_SCANCODE: on_key_pressed(1,11,1); break;
+        case DOT_SCANCODE: on_key_pressed(2,15,2); break;
+        case SINGO_SCANCODE: on_key_pressed(1,13,2); break;
+        case QUOTES_SCANCODE: on_key_pressed(0,13,2); break;
+        case COMMA_SCANCODE: on_key_pressed(3,15,2); break;
         default: keyPressed(sc);
         }
 
@@ -409,6 +447,18 @@ bool MainWindow::eventFilter(QObject *object, QEvent *event)
             case LEFT_SCANCODE: leftReleased(); break;
             case RIGHT_SCANCODE: rightReleased(); break;
             case LCTRL_SCANCODE: fireReleased(); break;
+            case F1_SCANCODE: on_key_released(2,11,1); break;
+            case F2_SCANCODE: on_key_released(3,11,1); break;
+            case BACKSPACE_SCANCODE: on_key_released(0,15,1); break;
+            case DELETE_SCANCODE: on_key_released(0,12,1); break;
+            case F3_SCANCODE: on_key_released(1,12,1); break;
+            case F4_SCANCODE: on_key_released(1,15,1); break;
+            case F5_SCANCODE: on_key_released(0,11,1); break;
+            case CAPS_LOCK_SCANCODE: on_key_released(1,11,1); break;
+            case DOT_SCANCODE: on_key_released(2,15,2); break;
+            case SINGO_SCANCODE: on_key_released(1,13,2); break;
+            case QUOTES_SCANCODE: on_key_released(0,13,2); break;
+            case COMMA_SCANCODE: on_key_released(3,15,2); break;
             default: keyReleased(sc);
             }
         }
@@ -484,6 +534,93 @@ void MainWindow::load_sna(const QString &filename)
     }
 }
 
+int count_pulse = 0;
+void MainWindow::pulse(int one_len, int zero_len)
+{
+    bus->tape_in(1);
+    z80_run(&cpustate, one_len);
+    bus->tape_in(0);
+    z80_run(&cpustate, zero_len);
+    count_pulse += one_len + zero_len;
+    if (count_pulse >= 70000-28) {
+        z80_int(&cpustate, 1);
+        z80_run(&cpustate, 28);
+        z80_int(&cpustate, 0);
+        ui->screen->repaint();
+        qApp->processEvents();
+        count_pulse = 0;
+
+    }
+}
+
+void MainWindow::pilot_pulse(int len){
+    for (int i = 0; i < len; i++)
+    {
+       pulse(2168, 2168);
+    }
+}
+
+void MainWindow::load_tap(const QString &filename)
+{
+    QFile tap(filename);
+    if (tap.open(QIODevice::ReadOnly)){
+
+        frame_timer->stop();
+        qApp->processEvents();
+        QByteArray buffer;
+        buffer = tap.readAll();
+        int cursor = 0;
+        DialogLoadingTAP* dialog = new DialogLoadingTAP(this, tap.size(),filename);
+        dialog->open();
+        while (cursor < tap.size()){
+            char len_b[] = {buffer[cursor++], buffer[cursor++]};
+            uint16_t block_len = *reinterpret_cast<uint16_t*>(len_b);
+            if (block_len > tap.size()-cursor)
+            {
+                QMessageBox::warning(this, "Error!","TAP-file is false!");
+                return;
+            }
+            if (dialog->isStopped){
+                //dialog->close();
+                QMessageBox::warning(this, "Stopped...","TAP-file loading aborted.");
+                frame_timer->start(1000/50);
+                reset();
+                return;
+            }
+            dialog->setBlockLength(block_len);
+            pilot_pulse(5000);
+            pulse(667, 735);
+            for (int i = 0; i < block_len; i++)
+            {
+                if (dialog->isStopped){
+                    //dialog->close();
+                    QMessageBox::warning(this, "Stopped...","TAP-file loading aborted.");
+                    frame_timer->start(1000/50);
+                    reset();
+                    return;
+                }
+                for (int j = 7; j >= 0; j--)
+                {
+                    int imp_len = (buffer[i+cursor] >> j) & 1 ? 1710 : 855;
+                    pulse(imp_len, imp_len);
+                }
+                dialog->setBlockValue(i);
+            }
+            cursor += block_len;
+            dialog->setValue(cursor);
+            dialog->setBlockLength(0);
+            dialog->setBlockValue(0);
+            pilot_pulse(1);
+            //frameRefresh();
+            //qApp->processEvents();
+        }
+        dialog->close();
+        frame_timer->start(1000/50);
+        QMessageBox::information(this,"Loading complete!", "Loading of TAP-file is successfully complete!");
+        //qDebug() << "Загрузка окончена!";
+    }
+}
+
 void MainWindow::load_z80(const QString &filename)
 {
     QFile z80(filename);
@@ -552,6 +689,7 @@ void MainWindow::load_z80(const QString &filename)
 
     }
 }
+
 void MainWindow::load_scr(const QString &filename)
 {
     QFile scrFile(filename);
@@ -597,15 +735,21 @@ void MainWindow::reset()
 
 }
 
-void MainWindow::on_key_pressed(int row, int col)
+void MainWindow::on_key_pressed(int row, int col, int add)
 {
-    qDebug() << "Key pressed: " << row << " " << col;
+    switch(add){
+    case 1: bus->key_press(0,8); break;
+    case 2: bus->key_press(1,15); break;
+    }
     bus->key_press(row, col);
 }
 
-void MainWindow::on_key_released(int row, int col)
+void MainWindow::on_key_released(int row, int col, int add)
 {
-    qDebug() << "Key released: "<< row << " " << col;
+    switch(add){
+    case 1: bus->key_release(0,8); break;
+    case 2: bus->key_release(1,15); break;
+    }
     bus->key_release(row,col);
 }
 
@@ -637,13 +781,15 @@ void MainWindow::on_action_Load_a_file_triggered()
 {
 
     QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Load File (snapshot / screenshot"), "/home/$USER/", tr("File (*.sna *.z80 *.scr)"));
-    if ((QFileInfo(fileName).suffix())=="sna")
+        tr("Load File (snapshot / screenshot / tape)"), "/home/$USER/", tr("File (*.sna *.z80 *.scr *.tap)"));
+    if ((QFileInfo(fileName).suffix())=="sna" or (QFileInfo(fileName).suffix())=="SNA")
         load_sna(fileName);
-    else if ((QFileInfo(fileName).suffix())=="z80")
+    else if ((QFileInfo(fileName).suffix())=="z80" or (QFileInfo(fileName).suffix())=="Z80")
         load_z80(fileName);
-    else if ((QFileInfo(fileName).suffix())=="scr")
+    else if ((QFileInfo(fileName).suffix())=="scr" or (QFileInfo(fileName).suffix())=="SCR")
         load_scr(fileName);
+    else if ((QFileInfo(fileName).suffix())=="tap" or (QFileInfo(fileName).suffix())=="TAP")
+        load_tap(fileName);
     else qErrnoWarning("Error!");
 }
 
@@ -762,7 +908,7 @@ void MainWindow::on_actionSpectrum_128k_triggered()
 
 void MainWindow::on_action_About_triggered()
 {
-    QMessageBox::about(this, "About", "My Little Speccy emulator Ver. 0.001\n\nDeveloper:\nDmitriy Savin, USPU");
+    QMessageBox::about(this, "About", "My Little Speccy emulator Ver. 0.21n\nDeveloper:\nDmitriy Savin, USPU");
 }
 
 void MainWindow::on_actionMake_a_scrennshot_triggered()
